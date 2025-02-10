@@ -57,10 +57,12 @@ def prepare_sequences_for_prediction(new_data, seq_length=200):
 
 
 def get_predict(dataset):
-    model = load_model('cnnlstm_model.keras')
-    # dataset = generate_features(dataset)
-    prepare_sequences_for_prediction(dataset)
-    predictions = model.predict(dataset)
+    # model = load_model('cnnlstm_model.keras')
+    # # dataset = generate_features(dataset)
+    # prepare_sequences_for_prediction(dataset)
+    # predictions = model.predict(dataset)
+
+    predictions = pd.Series(np.random.randint(0, 3, size=dataset.shape[0]))
     return predictions
 
 
@@ -96,13 +98,15 @@ def convert_periods_to_txt(periods):
 
 def get_file(input_path: str, output_path: str):
     dataset = get_dataset(input_path)
+    dataset = dataset.iloc[:72000, :1]
     print(dataset)
     predictions = get_predict(dataset)
-    print(predictions)
+    print('predictions complete')
     markers = summirize_predictions(predictions)
-    print(markers)
+    print('markers complete')
     txt_content = convert_periods_to_txt(markers)
-    print(txt_content)
+    print('txt_content complete')
+    print(output_path)
     with open(output_path, "w") as txt_file:
         txt_file.write(txt_content)
 
@@ -229,7 +233,7 @@ async def predict(file: UploadFile = File(...)):
     if not file.filename.endswith('.edf'):
         raise HTTPException(status_code=400, detail="Поддерживаются только файлы EDF")
     file_location = rf"{os.getcwd()}/temp_{file.filename}"
-    output_txt = rf"{os.getcwd()}/{file_location}.txt"
+    output_txt = rf"{file_location}.txt"
     print(file_location, output_txt)
     try:
         with open(file_location, "wb") as buffer:
@@ -238,8 +242,8 @@ async def predict(file: UploadFile = File(...)):
         return FileResponse(output_txt, media_type='text/plain', filename=f"{file.filename}.txt")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка при обработке файла: {str(e)}")
-    finally:
-        if os.path.exists(file_location):
-            os.remove(file_location)
-        if os.path.exists(output_txt):
-            os.remove(output_txt)
+    # finally:
+    #     if os.path.exists(file_location):
+    #         os.remove(file_location)
+    #     if os.path.exists(output_txt):
+    #         os.remove(output_txt)
